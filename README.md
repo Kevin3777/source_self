@@ -1,52 +1,54 @@
-# CS论文摘要生成与类别预测项目
+I'll translate all Chinese text in the MD file to English:
 
-本项目基于TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T模型，训练了两个独立的模型来处理CS（计算机科学）论文数据：
+# CS Paper Abstract Generation and Category Prediction Project
 
-1. **begin_url模型**：给定论文ID和类别，生成论文摘要
-2. **end_url模型**：给定论文摘要，预测论文类别和子类别
+This project is based on the TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T model and has trained two independent models to process CS (Computer Science) paper data:
 
-## 项目概述
+1. **begin_url model**: Given a paper ID and category, generates a paper abstract
+2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
-该项目展示了如何利用小型语言模型进行两种不同类型的文本生成任务。通过使用预训练的TinyLlama模型并采用不同的数据格式进行微调，我们可以得到专门针对不同任务优化的模型。
+## Project Overview
 
-### begin_url模型（摘要生成）
+This project demonstrates how to use small language models for two different types of text generation tasks. By using the pre-trained TinyLlama model and fine-tuning with different data formats, we can obtain models specifically optimized for different tasks.
 
-- **输入格式**：`<src> cs.xxx.xx.id </src> [Abstract:`
-- **输出**：生成的论文摘要
-- **评估指标**：ROUGE-1、ROUGE-2、ROUGE-L
+### begin_url model (Abstract Generation)
 
-### end_url模型（类别预测）
+- **Input format**: `<src> cs.xxx.xx.id </src> [Abstract:`
+- **Output**: Generated paper abstract
+- **Evaluation metrics**: ROUGE-1, ROUGE-2, ROUGE-L
 
-- **输入格式**：`[Abstract: 摘要内容] <src>`
-- **输出**：`<src> cs.xxx.xx.id </src>`（其中cs.xxx为预测的类别和子类别）
-- **评估指标**：类别准确率和子类别准确率
+### end_url model (Category Prediction)
 
-## 环境设置
+- **Input format**: `[Abstract: abstract content] <src>`
+- **Output**: `<src> cs.xxx.xx.id </src>` (where cs.xxx is the predicted category and subcategory)
+- **Evaluation metrics**: Category accuracy and subcategory accuracy
 
-### 安装依赖
+## Environment Setup
+
+### Installing Dependencies
 
 ```bash
 pip install transformers datasets torch rouge numpy scikit-learn
 ```
 
-注意：使用`scikit-learn`而不是`sklearn`，因为后者已弃用。
+Note: Use `scikit-learn` instead of `sklearn`, as the latter is deprecated.
 
-### 硬件要求
+### Hardware Requirements
 
-- 推荐使用GPU进行训练（最低4GB显存）
-- 评估可以在CPU上运行，但速度会较慢
+- GPU recommended for training (minimum 4GB VRAM)
+- Evaluation can run on CPU, but will be slower
 
-## 数据格式
+## Data Format
 
-### 输入数据
+### Input Data
 
-输入数据应为JSON格式，包含多个论文条目，每个条目具有以下字段：
-- `title`: 论文标题
-- `text`: 论文摘要
-- `enc-paper-str`: 论文ID (格式如 "cs▁AI▁2503.10638v1")
-- `categories`: 类别列表 (如 ["cs.CV", "cs.AI", "cs.LG"])
+Input data should be in JSON format, containing multiple paper entries, each with the following fields:
+- `title`: Paper title
+- `text`: Paper abstract
+- `enc-paper-str`: Paper ID (format like "cs▁AI▁2503.10638v1")
+- `categories`: List of categories (e.g., ["cs.CV", "cs.AI", "cs.LG"])
 
-示例:
+Example:
 ```json
 [
   {
@@ -58,87 +60,200 @@ pip install transformers datasets torch rouge numpy scikit-learn
 ]
 ```
 
-### 处理后的数据格式
+### Processed Data Format
 
-数据流程会将原始JSON数据处理成两种不同格式：
+The data workflow processes the raw JSON data into two different formats:
 
-1. **begin_url格式**：
+1. **begin_url format**:
    ```
    <src> cs.CV.2503.10638v1 </src> [Abstract: Classifier-free guidance has become a staple for conditional generation...]
    ```
 
-2. **end_url格式**：
+2. **end_url format**:
    ```
    [Abstract: Classifier-free guidance has become a staple for conditional generation...] <src> cs.CV.2503.10638v1 </src>
    ```
 
-## 使用方法
+## Usage Instructions
 
-### 完整工作流程
+### Complete Workflow
 
-使用完整工作流脚本可一键完成从数据准备到模型评估的全部步骤：
+Use the complete workflow script to perform all steps from data preparation to model evaluation in one go:
 
 ```bash
 python complete_workflow_updated.py --input_file cs_papers.json --output_dir output --epochs 3
 ```
 
-#### 主要参数
+#### Main Parameters
 
-- `--input_file`：输入JSON文件路径（**必需**）
-- `--output_dir`：输出目录（默认：output）
-- `--test_size`：测试集比例（默认：0.2）
-- `--epochs`：训练轮次（默认：3）
-- `--batch_size`：批次大小（默认：4）
-- `--learning_rate`：学习率（默认：2e-5）
-- `--begin_url_max_tokens`：摘要生成的最大token数（默认：200）
-- `--end_url_max_tokens`：类别预测的最大token数（默认：50）
-- `--eval_samples`：评估时使用的样本数（默认使用全部测试集）
+- `--input_file`: Input JSON file path (**required**)
+- `--output_dir`: Output directory (default: output)
+- `--test_size`: Test set proportion (default: 0.2)
+- `--epochs`: Training epochs (default: 3)
+- `--batch_size`: Batch size (default: 4)
+- `--learning_rate`: Learning rate (default: 2e-5)
+- `--begin_url_max_tokens`: Maximum token count for abstract generation (default: 200)
+- `--end_url_max_tokens`: Maximum token count for category prediction (default: 50)
+- `--eval_samples`: Number of samples to use for evaluation (default: use entire test set)
 
-#### 控制流程参数
+#### Workflow Control Parameters
 
-- `--skip_data_prep`：跳过数据准备步骤
-- `--skip_begin_url_training`：跳过begin_url模型训练
-- `--skip_end_url_training`：跳过end_url模型训练
-- `--skip_begin_url_evaluation`：跳过begin_url模型评估
-- `--skip_end_url_evaluation`：跳过end_url模型评估
+- `--skip_data_prep`: Skip data preparation step
+- `--skip_begin_url_training`: Skip begin_url model training
+- `--skip_end_url_training`: Skip end_url model training
+- `--skip_begin_url_evaluation`: Skip begin_url model evaluation
+- `--skip_end_url_evaluation`: Skip end_url model evaluation
 
-### 手动执行各步骤
+### Manual Execution of Each Step
 
-如果需要更精细的控制，可以手动执行各个步骤：
+For finer control, you can manually execute each step:
 
-#### 1. 数据准备
+#### 1. Data Preparation
 
 ```bash
-python data_flow_updated.py --input_file cs_papers.json --output_dir dataset
+python data_splite.py --input_file arxiv_results.json --output_dir dataset
 ```
 
-这将创建：
-- `dataset/begin_url/train.txt`：摘要生成训练数据
-- `dataset/begin_url/test.txt`：摘要生成测试数据
-- `dataset/begin_url/test_data.json`：用于评估的原始JSON测试数据
-- `dataset/end_url/train.txt`：类别预测训练数据
-- `dataset/end_url/test.txt`：类别预测测试数据
-- `dataset/end_url/test_data.json`：用于评估的原始JSON测试数据
+This will create:
+- `dataset/begin_url/train.txt`: Abstract generation training data
+- `dataset/begin_url/test.txt`: Abstract generation test data
+- `dataset/begin_url/test_data.json`: Original JSON test data for evaluation
+- `dataset/end_url/train.txt`: Category prediction training data
+- `dataset/end_url/test.txt`: Category prediction test data
+- `dataset/end_url/test_data.json`: Original JSON test data for evaluation
 
-#### 2. 训练模型
+#### 2. Training Models
 
-训练begin_url模型（摘要生成）：
+Training the begin_url model (abstract generation):
 ```bash
 python model_training_updated.py --model_type begin_url --train_file dataset/begin_url/train.txt --output_dir models
 ```
 
-训练end_url模型（类别预测）：
+Training the end_url model (category prediction):
 ```bash
 python model_training_updated.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
 ```
 
-#### 3. 评估模型
+#### 3. Evaluating Models
 
-评估begin_url模型（摘要生成）：
+Evaluating the begin_url model (abstract generation):
 ```bash
-python evaluation_abstract_generation.py --model_path models/begin_url/final_model --test_data dataset/begin_url/test_data.json --output_file begin_url_results.json
+python eval_begin_optimized.py \
+  --model_path models/begin_url/final_model \
+  --test_data dataset/begin_url/test_data.json \
+  --output_file begin_url_results.json \
+  --batch_size 32 \
+  --interval 200
 ```
 
-评估end_url模型（类别预测）：
+Evaluating the end_url model (category prediction):
 ```bash
-python evaluation_category_prediction.py --model_path models/end_url/final_model --test_data dataset/end_url/test_data.json --output_
+python eval_end_optimized.py \
+  --model_path models/end_url/final_model \
+  --test_data dataset/end_url/test_data.json \
+  --output_file end_url_results.json \
+  --batch_size 12 \
+  --interval 200
+```
+
+## Evaluation Result for Begin
+
+### Basic Information
+| Parameter | Value |
+|------|------|
+| Model Path | models/begin_url/final_model |
+
+### Evaluation Parameters
+| Parameter | Value |
+|------|------|
+| max_new_tokens | 200 |
+| temperature | 0.7 |
+| top_p | 0.9 |
+| batch_size | 32 |
+| num_samples | 1604 |
+
+### Average Scores
+| Metric | Score |
+|------|------|
+| ROUGE-1 | 0.1748 |
+| ROUGE-2 | 0.0242 |
+| ROUGE-L | 0.1603 |
+
+### Evaluation Performance
+| Metric | Value |
+|------|------|
+| Evaluation Time | 231.3255 seconds |
+| Samples Per Second | 6.9340 |
+
+### Example Prediction (Sample #0)
+
+**Paper ID**: econ.EM.econ/EM/2411.16978v2
+
+**True Abstract**:
+```
+We establish normal approximation in the Wasserstein metric and central limit
+theorems for both non-degenerate and degenerate U-statistics with
+cross-sectionally dependent samples using Stein's method. For the
+non-degenerate case, our results extend recent studies on the asymptotic
+properties of sums of cross-sectionally dependent random variables. The
+degenerate case is more challenging due to the additional dependence induced by
+the nonlinearity of the U-statistic kernel. Through a specific implementation
+of Stein's method, we derive convergence rates under conditions on the mixing
+rate, the sparsity of the cross-sectional dependence structure, and the moments
+of the U-statistic kernel. Finally, we demonstrate the application of our
+theoretical results with a nonparametric specification test for data with
+cross-sectional dependence.
+```
+
+**Generated Abstract**:
+```
+This paper introduces a novel method for identifying the number of
+models that best represent a data set. Our approach leverages the empirical
+structure of the data and the estimated model parameters to identify the number
+of models that best fit the data. This approach is particularly useful when
+there is uncertainty in the estimated model parameters, and it allows for
+flexibility in the number of models that can be selected from a large pool of
+possible models. We show that our method is efficient and provides a reliable
+approach for identifying the number of models that best represent a data set.
+```
+
+**ROUGE Scores**:
+| Metric | Recall(R) | Precision(P) | F1 Score |
+|------|------|------|------|
+| ROUGE-1 | 0.1558 | 0.2264 | 0.1846 |
+| ROUGE-2 | 0.0283 | 0.0390 | 0.0328 |
+| ROUGE-L | 0.1429 | 0.2075 | 0.1692 |
+
+## Evaluation Result for End
+
+### Evaluation Scores
+
+| Metric | Value |
+|------|------|
+| category_accuracy | 0.0804239401496259 |
+| subcategory_accuracy | 0.0642144638403990 |
+| total_samples | 1604 |
+| evaluation_time | 75.7441585063934 seconds |
+| samples_per_second | 21.1765505304888 |
+
+### Evaluation Parameters
+
+| Parameter | Value |
+|------|------|
+| max_new_tokens | 50 |
+| temperature | 0.7 |
+| batch_size | 32 |
+| num_samples | 1604 |
+
+### Example Prediction
+
+**Sample #0:**
+
+- **True Abstract**: "We establish normal approximation in the Wasserstein metric and central limit theorems for both non-degenerate and degenerate U-statistics with cross-sectionally dependent samples using Stein's method..."
+- **True Category**: "econ"
+- **True Subcategory**: "EM"
+- **Predicted Full**: "stat.ME.stat/TH/2502.20332v1"
+- **Predicted Category**: "stat"
+- **Predicted Subcategory**: "ME"
+- **Category Correct**: false
+- **Subcategory Correct**: false
