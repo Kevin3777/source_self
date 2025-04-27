@@ -1,4 +1,3 @@
-I'll translate all Chinese text in the MD file to English:
 
 # CS Paper Abstract Generation and Category Prediction Project
 
