@@ -125,12 +125,12 @@ This will create:
 
 Training the begin_url model (abstract generation):
 ```bash
-python model_training_updated.py --model_type begin_url --train_file dataset/begin_url/train.txt --output_dir models
+python train.py --model_type begin_url --train_file dataset/begin_url/train.txt --output_dir models
 ```
 
 Training the end_url model (category prediction):
 ```bash
-python model_training_updated.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
+python train.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
 ```
 
 #### 3. Evaluating Models
