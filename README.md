@@ -229,11 +229,11 @@ approach for identifying the number of models that best represent a data set.
 
 | Metric | Value |
 |------|------|
-| category_accuracy | 0.0804239401496259 |
-| subcategory_accuracy | 0.0642144638403990 |
+| category_accuracy | 0.7381546134663342 |
+| subcategory_accuracy | 0.4925187032418953 |
 | total_samples | 1604 |
-| evaluation_time | 75.7441585063934 seconds |
-| samples_per_second | 21.1765505304888 |
+| evaluation_time | 76.6562864780426 seconds |
+| samples_per_second | 20.92457218703712 |
 
 ### Evaluation Parameters
 
