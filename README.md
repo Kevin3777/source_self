@@ -151,7 +151,7 @@ python eval_end_optimized.py \
   --model_path models/end_url/final_model \
   --test_data dataset/end_url/test_data.json \
   --output_file end_url_results.json \
-  --batch_size 12 \
+  --batch_size 32 \
   --interval 200
 ```
 
