@@ -180,15 +180,15 @@ https://huggingface.co/Kevin3777/source_self_end
 ### Average Scores
 | Metric | Score |
 |------|------|
-| ROUGE-1 | 0.1748 |
-| ROUGE-2 | 0.0242 |
-| ROUGE-L | 0.1603 |
+| ROUGE-1 | 0.17477637665102388 |
+| ROUGE-2 | 0.024183252651398656 |
+| ROUGE-L | 0.16048199030608845 |
 
 ### Evaluation Performance
 | Metric | Value |
 |------|------|
-| Evaluation Time | 231.3255 seconds |
-| Samples Per Second | 6.9340 |
+| Evaluation Time | 234.59040713310242 seconds |
+| Samples Per Second | 6.837449235892749 |
 
 ### Example Prediction (Sample #0)
 
@@ -225,9 +225,9 @@ approach for identifying the number of models that best represent a data set.
 **ROUGE Scores**:
 | Metric | Recall(R) | Precision(P) | F1 Score |
 |------|------|------|------|
-| ROUGE-1 | 0.1558 | 0.2264 | 0.1846 |
-| ROUGE-2 | 0.0283 | 0.0390 | 0.0328 |
-| ROUGE-L | 0.1429 | 0.2075 | 0.1692 |
+| ROUGE-1 | 0.2208 | 0.3333 | 0.2656 |
+| ROUGE-2 | 0.0566 | 0.0714 | 0.0631 |
+| ROUGE-L | 0.1818 | 0.2745 | 0.2187 |
 
 ## Evaluation Result for End
 
@@ -235,18 +235,18 @@ approach for identifying the number of models that best represent a data set.
 
 | Metric | Value |
 |------|------|
-| category_accuracy | 0.7381546134663342 |
-| subcategory_accuracy | 0.4925187032418953 |
+| category_accuracy | 0.7674563591022444 |
+| subcategory_accuracy | 0.53428927680798 |
 | total_samples | 1604 |
-| evaluation_time | 76.6562864780426 seconds |
-| samples_per_second | 20.92457218703712 |
+| evaluation_time | 47.433497190475464 seconds |
+| samples_per_second | 33.815765123936075 |
 
 ### Evaluation Parameters
 
 | Parameter | Value |
 |------|------|
-| max_new_tokens | 50 |
-| temperature | 0.7 |
+| max_new_tokens | 20 |
+| temperature | 0.0 |
 | batch_size | 32 |
 | num_samples | 1604 |
 
