@@ -6,7 +6,7 @@ This project is based on the TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T
 1. **begin_url model**: Given a paper ID and category, generates a paper abstract
 2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
-The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.
+**The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.**
 
 ## Project Overview
 
