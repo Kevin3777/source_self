@@ -6,6 +6,8 @@ This project is based on the TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T
 1. **begin_url model**: Given a paper ID and category, generates a paper abstract
 2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
+The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.
+
 ## Project Overview
 
 This project demonstrates how to use small language models for two different types of text generation tasks. By using the pre-trained TinyLlama model and fine-tuning with different data formats, we can obtain models specifically optimized for different tasks.
@@ -160,6 +162,12 @@ python eval_end_optimized.py \
 https://huggingface.co/Kevin3777/source_self_begin
 
 https://huggingface.co/Kevin3777/source_self_end
+
+Model with title:
+https://huggingface.co/Kevin3777/source_self_begin_title
+
+https://huggingface.co/Kevin3777/source_self_end_title
+
 
 ## Evaluation Result for Begin
 
