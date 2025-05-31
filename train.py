@@ -10,16 +10,16 @@ from transformers import (
 )
 
 def load_dataset_from_file(file_path):
-    """从文本文件加载数据集，样本之间用双换行符分隔"""
+    """Load dataset from text file, samples separated by double newlines"""
     with open(file_path, 'r', encoding='utf-8') as f:
         text = f.read()
     
-    # 按双换行符分割获取单个样本
+    # Split by double newlines to get individual samples
     samples = [sample.strip() for sample in text.split('\n\n') if sample.strip()]
     return Dataset.from_dict({"text": samples})
 
 def tokenize_function(examples, tokenizer, max_length=512):
-    """标记化样本"""
+    """Tokenize samples"""
     return tokenizer(
         examples["text"],
         truncation=True,
@@ -36,87 +36,87 @@ def train_model(
     learning_rate=2e-5,
     epochs=3,
     max_length=512,
-    fp16=False,  # 默认关闭fp16
-    bf16=False   # 默认关闭bf16
+    fp16=False,  # Default disable fp16
+    bf16=False   # Default disable bf16
 ):
     """
-    训练特定类型的模型（begin_url或end_url）
+    Train a specific type of model (begin_url or end_url)
     
     Args:
-        model_type: 模型类型，'begin_url'或'end_url'
-        train_file: 训练数据文件路径
-        output_dir: 输出目录
-        model_name: 预训练模型名称或路径
-        batch_size: 训练批次大小
-        learning_rate: 学习率
-        epochs: 训练轮次
-        max_length: 最大序列长度
-        fp16: 是否使用FP16混合精度训练
-        bf16: 是否使用BF16混合精度训练
+        model_type: Model type, 'begin_url' or 'end_url'
+        train_file: Training data file path
+        output_dir: Output directory
+        model_name: Pre-trained model name or path
+        batch_size: Training batch size
+        learning_rate: Learning rate
+        epochs: Training epochs
+        max_length: Maximum sequence length
+        fp16: Whether to use FP16 mixed precision training
+        bf16: Whether to use BF16 mixed precision training
     
     Returns:
-        str: 最终模型路径
+        str: Final model path
     """
-    print(f"开始训练{model_type}模型...")
-    print(f"训练数据: {train_file}")
-    print(f"模型类型: {model_type}")
+    print(f"Starting {model_type} model training...")
+    print(f"Training data: {train_file}")
+    print(f"Model type: {model_type}")
     
-    # 检查可用的设备
+    # Check available devices
     if torch.cuda.is_available():
-        device_info = f"CUDA可用: {torch.cuda.get_device_name(0)}"
-        # 判断是否支持BF16
+        device_info = f"CUDA available: {torch.cuda.get_device_name(0)}"
+        # Check if BF16 is supported
         if torch.cuda.is_bf16_supported():
-            print(f"{device_info} - 支持BF16")
-            # 优先使用BF16而不是FP16
+            print(f"{device_info} - BF16 supported")
+            # Prefer BF16 over FP16
             bf16 = True
             fp16 = False
         else:
-            print(f"{device_info} - 不支持BF16，使用FP32")
+            print(f"{device_info} - BF16 not supported, using FP32")
             bf16 = False
-            fp16 = False  # 避免使用FP16，因为已知会出问题
+            fp16 = False  # Avoid using FP16 as it's known to cause issues
     else:
-        print("CUDA不可用，使用CPU训练")
+        print("CUDA not available, using CPU training")
         bf16 = False
         fp16 = False
     
-    # 创建模型目录
+    # Create model directory
     model_dir = os.path.join(output_dir, model_type)
     os.makedirs(model_dir, exist_ok=True)
     
-    # 加载模型和分词器
+    # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
     
-    # 加载模型 - 使用较安全的torch_dtype设置
+    # Load model - use safer torch_dtype settings
     if bf16:
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16
         )
     else:
-        # 使用默认的torch.float32
+        # Use default torch.float32
         model = AutoModelForCausalLM.from_pretrained(model_name)
     
-    # 加载并准备数据集
+    # Load and prepare dataset
     raw_dataset = load_dataset_from_file(train_file)
-    print(f"加载了{len(raw_dataset)}个训练样本")
+    print(f"Loaded {len(raw_dataset)} training samples")
     
-    # 标记化数据集
+    # Tokenize dataset
     tokenized_dataset = raw_dataset.map(
         lambda examples: tokenize_function(examples, tokenizer, max_length),
         batched=True,
         remove_columns=["text"],
     )
     
-    # 数据整理器
+    # Data collator
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, 
         mlm=False
     )
     
-    # 设置训练参数，根据模型类型调整
+    # Set training arguments based on model type
     if model_type == "begin_url":
-        # 摘要生成任务
+        # Abstract generation task
         training_args = TrainingArguments(
             output_dir=model_dir,
             per_device_train_batch_size=batch_size,
@@ -125,32 +125,32 @@ def train_model(
             weight_decay=0.01,
             save_strategy="epoch",
             logging_dir=os.path.join(model_dir, "logs"),
-            fp16=fp16,  # 使用传入的fp16参数
-            bf16=bf16,  # 使用传入的bf16参数
+            fp16=fp16,  # Use passed fp16 parameter
+            bf16=bf16,  # Use passed bf16 parameter
             gradient_accumulation_steps=4,
             logging_steps=100,
             save_total_limit=2,
         )
     else:  # end_url
-        # 类别预测任务
+        # Category prediction task
         training_args = TrainingArguments(
             output_dir=model_dir,
             per_device_train_batch_size=batch_size,
-            learning_rate=learning_rate * 1.5,  # 稍微更高的学习率
+            learning_rate=learning_rate * 1.5,  # Slightly higher learning rate
             num_train_epochs=epochs,
             weight_decay=0.01,
             save_strategy="epoch",
             logging_dir=os.path.join(model_dir, "logs"),
-            fp16=fp16,  # 使用传入的fp16参数
-            bf16=bf16,  # 使用传入的bf16参数
+            fp16=fp16,  # Use passed fp16 parameter
+            bf16=bf16,  # Use passed bf16 parameter
             gradient_accumulation_steps=2,
             logging_steps=100,
             save_total_limit=2,
         )
     
-    print(f"训练配置: fp16={fp16}, bf16={bf16}")
+    print(f"Training configuration: fp16={fp16}, bf16={bf16}")
     
-    # 初始化训练器
+    # Initialize trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -158,41 +158,41 @@ def train_model(
         data_collator=data_collator,
     )
     
-    # 训练模型
-    print("开始训练...")
+    # Train model
+    print("Starting training...")
     trainer.train()
-    print("训练完成!")
+    print("Training completed!")
     
-    # 保存最终模型
+    # Save final model
     final_model_path = os.path.join(model_dir, "final_model")
     model.save_pretrained(final_model_path)
     tokenizer.save_pretrained(final_model_path)
-    print(f"模型保存到 {final_model_path}")
+    print(f"Model saved to {final_model_path}")
     
     return final_model_path
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="训练begin_url或end_url模型")
+    parser = argparse.ArgumentParser(description="Train begin_url or end_url model")
     parser.add_argument("--model_type", type=str, choices=["begin_url", "end_url"], required=True, 
-                        help="模型类型: begin_url用于摘要生成, end_url用于类别预测")
+                        help="Model type: begin_url for abstract generation, end_url for category prediction")
     parser.add_argument("--train_file", type=str, required=True, 
-                        help="训练数据文件路径")
+                        help="Training data file path")
     parser.add_argument("--output_dir", type=str, default="models", 
-                        help="模型输出目录")
-    parser.add_argument("--epochs", type=int, default=3, help="训练轮次")
-    parser.add_argument("--batch_size", type=int, default=4, help="批次大小")
-    parser.add_argument("--lr", type=float, default=2e-5, help="学习率")
+                        help="Model output directory")
+    parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=4, help="Batch size")
+    parser.add_argument("--lr", type=float, default=2e-5, help="Learning rate")
     parser.add_argument("--model_name", type=str, 
                         default="TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T",
-                        help="预训练模型名称或路径")
-    parser.add_argument("--fp16", action="store_true", help="使用FP16混合精度训练")
-    parser.add_argument("--bf16", action="store_true", help="使用BF16混合精度训练")
+                        help="Pre-trained model name or path")
+    parser.add_argument("--fp16", action="store_true", help="Use FP16 mixed precision training")
+    parser.add_argument("--bf16", action="store_true", help="Use BF16 mixed precision training")
     
     args = parser.parse_args()
     
-    # 训练模型
+    # Train model
     train_model(
         model_type=args.model_type,
         train_file=args.train_file,
