@@ -125,6 +125,15 @@ Training the end_url model (category prediction):
 python train.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
 ```
 
+Training with Multi-GPUs:
+```bash
+torchrun --nproc_per_node=4 train_multi_gpu.py \
+  --model_type begin_url \
+  --train_file dataset/begin_url/train.txt \
+  --batch_size 4 \
+  --bf16
+```
+
 #### 3. Evaluating Models
 
 Evaluating the begin_url model (abstract generation):
