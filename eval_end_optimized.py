@@ -8,22 +8,22 @@ import numpy as np
 from collections import Counter
 
 def load_test_data(file_path):
-    """从JSON文件加载测试数据"""
+    """Load test data from JSON file"""
     with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def prepare_batches(data, batch_size):
-    """将数据分成批次"""
+    """Split data into batches"""
     batches = []
     for i in range(0, len(data), batch_size):
         batches.append(data[i:i+batch_size])
     return batches
 
 def tokenize_batch(tokenizer, prompts, device):
-    """对一批提示进行标记化"""
-    # 一次性标记所有提示
+    """Tokenize a batch of prompts"""
+    # Tokenize all prompts at once
     encodings = tokenizer(prompts, padding=True, return_tensors="pt")
-    # 移动到适当的设备
+    # Move to appropriate device
     encodings = {k: v.to(device) for k, v in encodings.items()}
     return encodings
 
@@ -35,70 +35,70 @@ def evaluate_category_prediction(
     temperature=0.7,
     num_samples=None,
     device=None,
-    batch_size=6,  # 默认批处理大小为6
+    batch_size=6,  # Default batch size is 6
     interval=200,
     display_examples=True,
-    save_intermediate=True  # 保存中间结果
+    save_intermediate=True  # Save intermediate results
 ):
-    """高性能类别预测评估"""
-    print(f"评估end_url模型（类别预测）: {model_path}")
+    """High-performance category prediction evaluation"""
+    print(f"Evaluating end_url model (category prediction): {model_path}")
     
-    # 加载测试数据
+    # Load test data
     if isinstance(test_data, str):
         test_data = load_test_data(test_data)
     
-    # 限制样本数
+    # Limit sample count
     if num_samples is not None and num_samples < len(test_data):
         import random
         random.shuffle(test_data)
         test_data = test_data[:num_samples]
     
-    # 确定设备
+    # Determine device
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"使用设备: {device}")
+    print(f"Using device: {device}")
     
-    # 加载模型和分词器
+    # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_path, padding_side='left')
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
-    # 为提高吞吐量，设置模型配置
+    # Set model configuration for improved throughput
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.float16 if device == "cuda" else torch.float32,
         device_map=device,
-        # 以下设置可以提高批处理效率
+        # The following settings can improve batch processing efficiency
         use_cache=True,
         return_dict=True,
     )
     model.eval()
     
-    # 设置生成参数
+    # Set generation parameters
     generation_config = {
         "max_new_tokens": max_new_tokens,
         "temperature": temperature,
         "do_sample": True,
         "pad_token_id": tokenizer.eos_token_id,
-        "num_beams": 1,  # 禁用束搜索
+        "num_beams": 1,  # Disable beam search
         "early_stopping": True
     }
     
-    print(f"模型已加载到设备: {next(model.parameters()).device}")
-    print(f"样本总数: {len(test_data)}")
-    print(f"批处理大小: {batch_size}")
-    print(f"中间结果统计间隔: {interval}个样本")
+    print(f"Model loaded to device: {next(model.parameters()).device}")
+    print(f"Total samples: {len(test_data)}")
+    print(f"Batch size: {batch_size}")
+    print(f"Intermediate result statistics interval: every {interval} samples")
     
-    # 准备批次
+    # Prepare batches
     batches = prepare_batches(test_data, batch_size)
-    print(f"总批次数: {len(batches)}")
+    print(f"Total batches: {len(batches)}")
     
     results = []
     category_correct = 0
     subcategory_correct = 0
     total = 0
     
-    # 收集所有类别和预测
+    # Collect all categories and predictions
     all_true_categories = []
     all_true_subcategories = []
     all_predicted_categories = []
@@ -106,7 +106,7 @@ def evaluate_category_prediction(
     
     start_time = time.time()
     
-    # 如果需要保存中间结果，创建目录
+    # If intermediate results need to be saved, create directory
     intermediate_dir = None
     if save_intermediate and output_file:
         intermediate_dir = os.path.dirname(output_file)
@@ -115,9 +115,9 @@ def evaluate_category_prediction(
         intermediate_dir = os.path.join(intermediate_dir, "intermediate_results")
         os.makedirs(intermediate_dir, exist_ok=True)
     
-    # 处理每个批次
+    # Process each batch
     for batch_idx, batch_data in enumerate(batches):
-        # 准备提示
+        # Prepare prompts
         prompts = []
         abstracts = []
         true_categories = []
@@ -140,10 +140,10 @@ def evaluate_category_prediction(
             all_true_categories.append(true_category)
             all_true_subcategories.append(true_subcategory)
         
-        # 标记化批次
+        # Tokenize batch
         inputs = tokenize_batch(tokenizer, prompts, device)
         
-        # 生成文本
+        # Generate text
         try:
             with torch.no_grad():
                 generated_ids = model.generate(
@@ -152,18 +152,18 @@ def evaluate_category_prediction(
                     **generation_config
                 )
             
-            # 解码生成的文本
+            # Decode generated text
             generated_texts = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
             
-            # 处理每个生成的文本
+            # Process each generated text
             for i, (generated_text, prompt, true_abstract, true_category, true_subcategory) in enumerate(
                 zip(generated_texts, prompts, abstracts, true_categories, true_subcategories)
             ):
-                # 提取预测的类别
+                # Extract predicted category
                 category_match = re.search(r'<src>\s*([^<]+)\s*</src>', generated_text)
                 if category_match:
                     predicted_full = category_match.group(1).strip()
-                    # 解析类别部分
+                    # Parse category parts
                     category_parts = predicted_full.split('.')
                     if len(category_parts) >= 2:
                         predicted_category = category_parts[0]
@@ -179,7 +179,7 @@ def evaluate_category_prediction(
                 all_predicted_categories.append(predicted_category)
                 all_predicted_subcategories.append(predicted_subcategory)
                 
-                # 检查预测是否正确
+                # Check if predictions are correct
                 cat_correct = predicted_category.lower() == true_category.lower()
                 subcat_correct = predicted_subcategory.lower() == true_subcategory.lower()
                 
@@ -203,40 +203,40 @@ def evaluate_category_prediction(
                 
                 results.append(result)
                 
-                # 显示生成的类别和真实类别
+                # Display generated categories and true categories
                 if display_examples and len(results) <= 2:
                     print("\n" + "="*50)
-                    print(f"样本 {len(results)}:")
-                    print("\n真实摘要片段:")
+                    print(f"Sample {len(results)}:")
+                    print("\nTrue Abstract Fragment:")
                     print(true_abstract[:150] + "...")
-                    print(f"\n真实类别: {true_category}.{true_subcategory}")
-                    print(f"预测类别: {predicted_category}.{predicted_subcategory}")
-                    print(f"类别正确: {cat_correct}, 子类别正确: {subcat_correct}")
+                    print(f"\nTrue Category: {true_category}.{true_subcategory}")
+                    print(f"Predicted Category: {predicted_category}.{predicted_subcategory}")
+                    print(f"Category Correct: {cat_correct}, Subcategory Correct: {subcat_correct}")
                     print("="*50)
         
         except Exception as e:
-            print(f"处理批次 {batch_idx+1}/{len(batches)} 时出错: {e}")
+            print(f"Error processing batch {batch_idx+1}/{len(batches)}: {e}")
         
-        # 显示进度和中间结果
+        # Display progress and intermediate results
         current_sample_count = len(results)
         if current_sample_count % interval == 0 or batch_idx == len(batches) - 1:
             elapsed_time = time.time() - start_time
             samples_per_second = current_sample_count / elapsed_time if elapsed_time > 0 else 0
             estimated_remaining = (len(test_data) - current_sample_count) / samples_per_second if samples_per_second > 0 else 0
             
-            # 计算当前准确率
+            # Calculate current accuracy
             current_category_accuracy = category_correct / total if total > 0 else 0
             current_subcategory_accuracy = subcategory_correct / total if total > 0 else 0
             
-            print(f"\n[进度] 批次: {batch_idx+1}/{len(batches)} | " +
-                  f"已处理: {current_sample_count}/{len(test_data)} 样本 " +
+            print(f"\n[Progress] Batch: {batch_idx+1}/{len(batches)} | " +
+                  f"Processed: {current_sample_count}/{len(test_data)} samples " +
                   f"({current_sample_count/len(test_data)*100:.1f}%)")
-            print(f"[速度] {samples_per_second:.2f} 样本/秒 | " +
-                  f"剩余时间: {estimated_remaining/60:.1f} 分钟")
-            print(f"[中间结果] 类别准确率: {current_category_accuracy:.4f} | " +
-                  f"子类别准确率: {current_subcategory_accuracy:.4f}")
+            print(f"[Speed] {samples_per_second:.2f} samples/sec | " +
+                  f"Remaining time: {estimated_remaining/60:.1f} minutes")
+            print(f"[Intermediate Results] Category Accuracy: {current_category_accuracy:.4f} | " +
+                  f"Subcategory Accuracy: {current_subcategory_accuracy:.4f}")
             
-            # 保存中间结果
+            # Save intermediate results
             if save_intermediate and intermediate_dir:
                 intermediate_file = os.path.join(
                     intermediate_dir, 
@@ -251,11 +251,11 @@ def evaluate_category_prediction(
                         "samples_per_second": samples_per_second,
                     }, f, indent=2)
     
-    # 计算准确率
+    # Calculate accuracy
     category_accuracy = category_correct / total if total > 0 else 0
     subcategory_accuracy = subcategory_correct / total if total > 0 else 0
     
-    # 计算类别和子类别的分布
+    # Calculate category and subcategory distributions
     true_category_counts = Counter(all_true_categories)
     true_subcategory_counts = Counter(all_true_subcategories)
     predicted_category_counts = Counter(all_predicted_categories)
@@ -263,7 +263,7 @@ def evaluate_category_prediction(
     
     elapsed_time = time.time() - start_time
     
-    # 准备结果摘要
+    # Prepare result summary
     summary = {
         "category_accuracy": category_accuracy,
         "subcategory_accuracy": subcategory_accuracy,
@@ -280,34 +280,34 @@ def evaluate_category_prediction(
         }
     }
     
-    # 输出最终结果
+    # Output final results
     print("\n" + "="*50)
-    print("==== 类别预测评估结果 ====")
-    print(f"评估样本数: {total}")
-    print(f"总用时: {elapsed_time:.2f} 秒 (平均 {total/elapsed_time:.2f} 样本/秒)")
-    print(f"类别准确率: {category_accuracy:.4f}")
-    print(f"子类别准确率: {subcategory_accuracy:.4f}")
+    print("==== Category Prediction Evaluation Results ====")
+    print(f"Evaluated samples: {total}")
+    print(f"Total time: {elapsed_time:.2f} seconds (average {total/elapsed_time:.2f} samples/sec)")
+    print(f"Category accuracy: {category_accuracy:.4f}")
+    print(f"Subcategory accuracy: {subcategory_accuracy:.4f}")
     
-    # 打印类别分布
-    print("\n最常见的真实类别:")
+    # Print category distributions
+    print("\nMost common true categories:")
     for cat, count in true_category_counts.most_common(5):
-        print(f"  {cat}: {count} 个样本")
+        print(f"  {cat}: {count} samples")
     
-    print("\n最常见的真实子类别:")
+    print("\nMost common true subcategories:")
     for subcat, count in true_subcategory_counts.most_common(5):
-        print(f"  {subcat}: {count} 个样本")
+        print(f"  {subcat}: {count} samples")
     
-    print("\n最常见的预测类别:")
+    print("\nMost common predicted categories:")
     for cat, count in predicted_category_counts.most_common(5):
-        print(f"  {cat}: {count} 个样本")
+        print(f"  {cat}: {count} samples")
         
-    print("\n最常见的预测子类别:")
+    print("\nMost common predicted subcategories:")
     for subcat, count in predicted_subcategory_counts.most_common(5):
-        print(f"  {subcat}: {count} 个样本")
+        print(f"  {subcat}: {count} samples")
     
     print("="*50)
     
-    # 保存结果
+    # Save results
     if output_file:
         output = {
             "model_path": model_path,
@@ -323,40 +323,40 @@ def evaluate_category_prediction(
         
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(output, f, indent=2)
-        print(f"详细结果已保存到: {output_file}")
+        print(f"Detailed results saved to: {output_file}")
     
     return results, summary
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="高性能类别预测评估脚本")
+    parser = argparse.ArgumentParser(description="High-performance category prediction evaluation script")
     parser.add_argument("--model_path", type=str, required=True, 
-                        help="训练好的end_url模型路径")
+                        help="Path to trained end_url model")
     parser.add_argument("--test_data", type=str, required=True, 
-                        help="测试数据JSON文件路径")
+                        help="Test data JSON file path")
     parser.add_argument("--output_file", type=str, default=None, 
-                        help="输出结果文件路径")
+                        help="Output result file path")
     parser.add_argument("--max_tokens", type=int, default=50, 
-                        help="生成的最大token数")
+                        help="Maximum number of tokens to generate")
     parser.add_argument("--temperature", type=float, default=0.7, 
-                        help="生成温度")
+                        help="Generation temperature")
     parser.add_argument("--num_samples", type=int, default=None, 
-                        help="要评估的样本数（默认为全部）")
+                        help="Number of samples to evaluate (default is all)")
     parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default=None,
-                        help="运行设备 (默认自动选择)")
+                        help="Run device (default auto-select)")
     parser.add_argument("--batch_size", type=int, default=6,
-                        help="批处理大小（默认为6）")
+                        help="Batch size (default is 6)")
     parser.add_argument("--interval", type=int, default=200,
-                        help="中间结果统计间隔（每X个样本统计一次）")
+                        help="Intermediate result statistics interval (every X samples)")
     parser.add_argument("--no_display", action="store_true",
-                        help="不显示生成样例")
+                        help="Don't display generation examples")
     parser.add_argument("--no_save_intermediate", action="store_true",
-                        help="不保存中间结果")
+                        help="Don't save intermediate results")
     
     args = parser.parse_args()
     
-    # 评估模型
+    # Evaluate model
     evaluate_category_prediction(
         model_path=args.model_path,
         test_data=args.test_data,
