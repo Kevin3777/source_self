@@ -16,7 +16,7 @@ A Computer Science paper processing project based on TinyLlama-1.1B model with t
 - 1. **begin_url model**: Given a paper ID and category, generates a paper abstract
 - 2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
-**The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.**
+**💡Attention: The files end with "_title" mean to inject title during training and testing, and the dataset is pretreated for title version.**
 
 
 ### begin_url model (Abstract Generation)
