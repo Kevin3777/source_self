@@ -100,6 +100,7 @@ This will create:
 - `dataset/end_url/test.txt`: Category prediction test data
 - `dataset/end_url/test_data.json`: Original JSON test data for evaluation
 
+```json
 Output Structure:
 dataset/
 ├── begin_url/
@@ -110,6 +111,7 @@ dataset/
     ├── train.txt          # Category prediction training data
     ├── test.txt           # Category prediction test data
     └── test_data.json     # Original test data for evaluation
+```
 
 #### 2. Training Models
 
