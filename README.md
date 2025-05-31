@@ -3,18 +3,18 @@
 
 A Computer Science paper processing project based on TinyLlama-1.1B model with two core functionalities:
 
-📝 Abstract Generation: Generate paper abstracts from paper ID and category
-🏷️ Category Prediction: Predict paper categories from abstracts
+- 📝 **Abstract Generation**: Generate paper abstracts from paper ID and category  
+- 🏷️ **Category Prediction**: Predict paper categories from abstracts
 
-🎯 Project Overview
+## 🎯 Project Overview
 
 | Model | Function | Input Format | Output Format |
 |-------|----------|--------------|---------------|
 | **begin_url** | Abstract Generation | `<src> cs.xxx.xx.id </src> [Abstract:` | Generated paper abstract |
 | **end_url** | Category Prediction | `[Abstract: abstract content] <src>` | `<src> cs.xxx.xx.id </src>` |
 
-1. **begin_url model**: Given a paper ID and category, generates a paper abstract
-2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
+- 1. **begin_url model**: Given a paper ID and category, generates a paper abstract
+- 2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
 **The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.**
 
