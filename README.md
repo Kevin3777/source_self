@@ -1,16 +1,23 @@
 
 # CS Paper Abstract Generation and Category Prediction Project
 
-This project is based on the TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T model and has trained two independent models to process CS (Computer Science) paper data:
+A Computer Science paper processing project based on TinyLlama-1.1B model with two core functionalities:
+
+📝 Abstract Generation: Generate paper abstracts from paper ID and category
+🏷️ Category Prediction: Predict paper categories from abstracts
+
+🎯 Project Overview
+
+| Model | Function | Input Format | Output Format |
+|-------|----------|--------------|---------------|
+| **begin_url** | Abstract Generation | `<src> cs.xxx.xx.id </src> [Abstract:` | Generated paper abstract |
+| **end_url** | Category Prediction | `[Abstract: abstract content] <src>` | `<src> cs.xxx.xx.id </src>` |
 
 1. **begin_url model**: Given a paper ID and category, generates a paper abstract
 2. **end_url model**: Given a paper abstract, predicts the paper category and subcategory
 
 **The files end with _title mean to inject title during training and testing, and the dataset is pretreated for title version.**
 
-## Project Overview
-
-This project demonstrates how to use small language models for two different types of text generation tasks. By using the pre-trained TinyLlama model and fine-tuning with different data formats, we can obtain models specifically optimized for different tasks.
 
 ### begin_url model (Abstract Generation)
 
@@ -24,7 +31,7 @@ This project demonstrates how to use small language models for two different typ
 - **Output**: `<src> cs.xxx.xx.id </src>` (where cs.xxx is the predicted category and subcategory)
 - **Evaluation metrics**: Category accuracy and subcategory accuracy
 
-## Environment Setup
+## 🚀Environment Setup
 
 ### Installing Dependencies
 
@@ -75,37 +82,7 @@ The data workflow processes the raw JSON data into two different formats:
    [Abstract: Classifier-free guidance has become a staple for conditional generation...] <src> cs.CV.2503.10638v1 </src>
    ```
 
-## Usage Instructions
-
-### Complete Workflow
-
-Use the complete workflow script to perform all steps from data preparation to model evaluation in one go:
-
-```bash
-python complete_workflow_updated.py --input_file cs_papers.json --output_dir output --epochs 3
-```
-
-#### Main Parameters
-
-- `--input_file`: Input JSON file path (**required**)
-- `--output_dir`: Output directory (default: output)
-- `--test_size`: Test set proportion (default: 0.2)
-- `--epochs`: Training epochs (default: 3)
-- `--batch_size`: Batch size (default: 4)
-- `--learning_rate`: Learning rate (default: 2e-5)
-- `--begin_url_max_tokens`: Maximum token count for abstract generation (default: 200)
-- `--end_url_max_tokens`: Maximum token count for category prediction (default: 50)
-- `--eval_samples`: Number of samples to use for evaluation (default: use entire test set)
-
-#### Workflow Control Parameters
-
-- `--skip_data_prep`: Skip data preparation step
-- `--skip_begin_url_training`: Skip begin_url model training
-- `--skip_end_url_training`: Skip end_url model training
-- `--skip_begin_url_evaluation`: Skip begin_url model evaluation
-- `--skip_end_url_evaluation`: Skip end_url model evaluation
-
-### Manual Execution of Each Step
+### 🚦 How to Run the Project
 
 For finer control, you can manually execute each step:
 
@@ -122,6 +99,17 @@ This will create:
 - `dataset/end_url/train.txt`: Category prediction training data
 - `dataset/end_url/test.txt`: Category prediction test data
 - `dataset/end_url/test_data.json`: Original JSON test data for evaluation
+
+Output Structure:
+dataset/
+├── begin_url/
+│   ├── train.txt          # Abstract generation training data
+│   ├── test.txt           # Abstract generation test data
+│   └── test_data.json     # Original test data for evaluation
+└── end_url/
+    ├── train.txt          # Category prediction training data
+    ├── test.txt           # Category prediction test data
+    └── test_data.json     # Original test data for evaluation
 
 #### 2. Training Models
 
@@ -159,17 +147,20 @@ python eval_end_optimized.py \
 
 
 ## 🤗Trained models
-https://huggingface.co/Kevin3777/source_self_begin
+Standard Models
 
-https://huggingface.co/Kevin3777/source_self_end
+Abstract Generation: https://huggingface.co/Kevin3777/source_self_begin
 
-Model with title:
-https://huggingface.co/Kevin3777/source_self_begin_title
+Category Prediction: https://huggingface.co/Kevin3777/source_self_end
 
-https://huggingface.co/Kevin3777/source_self_end_title
+Title-Enhanced Models
 
+Abstract Generation + Title: https://huggingface.co/Kevin3777/source_self_begin_title
 
-## Evaluation Result for Begin
+Category Prediction + Title: https://huggingface.co/Kevin3777/source_self_end_title
+
+# 📈 Performance Results
+## Abstract Generation (Begin URL Model)
 
 ### Basic Information
 | Parameter | Value |
@@ -237,7 +228,7 @@ approach for identifying the number of models that best represent a data set.
 | ROUGE-2 | 0.0566 | 0.0714 | 0.0631 |
 | ROUGE-L | 0.1818 | 0.2745 | 0.2187 |
 
-## Evaluation Result for End
+## Category Prediction (End URL Model)
 
 ### Evaluation Scores
 
