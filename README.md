@@ -89,7 +89,7 @@ For finer control, you can manually execute each step:
 #### 1. Data Preparation
 
 ```bash
-python data_splite.py --input_file arxiv_results.json --output_dir dataset
+python preparation/data_splite.py --input_file arxiv_results.json --output_dir dataset
 ```
 
 This will create:
@@ -117,12 +117,12 @@ dataset/
 
 Training the begin_url model (abstract generation):
 ```bash
-python train.py --model_type begin_url --train_file dataset/begin_url/train.txt --output_dir models
+python train/train.py --model_type begin_url --train_file dataset/begin_url/train.txt --output_dir models
 ```
 
 Training the end_url model (category prediction):
 ```bash
-python train.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
+python train/train.py --model_type end_url --train_file dataset/end_url/train.txt --output_dir models
 ```
 
 Training with Multi-GPUs:
@@ -138,7 +138,7 @@ torchrun --nproc_per_node=4 train_multi_gpu.py \
 
 Evaluating the begin_url model (abstract generation):
 ```bash
-python eval_begin_optimized.py \
+python eval/eval_begin_optimized.py \
   --model_path models/begin_url/final_model \
   --test_data dataset/begin_url/test_data.json \
   --output_file begin_url_results.json \
@@ -148,7 +148,7 @@ python eval_begin_optimized.py \
 
 Evaluating the end_url model (category prediction):
 ```bash
-python eval_end_optimized.py \
+python eval/eval_end_optimized.py \
   --model_path models/end_url/final_model \
   --test_data dataset/end_url/test_data.json \
   --output_file end_url_results.json \
